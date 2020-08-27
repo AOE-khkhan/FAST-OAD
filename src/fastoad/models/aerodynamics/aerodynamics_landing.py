@@ -16,9 +16,9 @@ Aero computation for landing phase
 
 import numpy as np
 import openmdao.api as om
+
 from fastoad.models.options import OpenMdaoOptionDispatcherGroup
 from fastoad.utils.physics import Atmosphere
-
 from .components.compute_max_cl_landing import ComputeMaxClLanding
 from .components.high_lift_aero import ComputeDeltaHighLift
 from .external.xfoil import XfoilPolar
@@ -114,7 +114,7 @@ class Compute3DMaxCL(om.ExplicitComponent):
     """
 
     def setup(self):
-        self.add_input("data:geometry:wing:sweep_25", val=np.nan, units="rad")
+        self.add_input("data:geometry:wing:sweep_25", val=np.nan, units="deg")
         self.add_input("data:aerodynamics:aircraft:landing:CL_max_clean_2D", val=np.nan)
 
         self.add_output("data:aerodynamics:aircraft:landing:CL_max_clean")
@@ -122,7 +122,7 @@ class Compute3DMaxCL(om.ExplicitComponent):
         self.declare_partials("*", "*", method="fd")
 
     def compute(self, inputs, outputs, discrete_inputs=None, discrete_outputs=None):
-        sweep_25 = inputs["data:geometry:wing:sweep_25"]
+        sweep_25 = np.radians(inputs["data:geometry:wing:sweep_25"])
         cl_max_2d = inputs["data:aerodynamics:aircraft:landing:CL_max_clean_2D"]
         outputs["data:aerodynamics:aircraft:landing:CL_max_clean"] = (
             cl_max_2d * 0.9 * np.cos(sweep_25)

@@ -14,7 +14,7 @@
 
 import numpy as np
 import openmdao.api as om
-from scipy.constants import g
+from scipy.constants import g, nautical_mile
 
 from fastoad import BundleLoader
 from fastoad.constants import EngineSetting
@@ -71,7 +71,7 @@ class BreguetWithPropulsion(om.ExplicitComponent):
         self.add_input("settings:mission:sizing:breguet:climb:mass_ratio", 0.97)
         self.add_input("settings:mission:sizing:breguet:descent:mass_ratio", 0.98)
         self.add_input("settings:mission:sizing:breguet:reserve:mass_ratio", 0.06)
-        self.add_input("data:TLAR:range", np.nan, units="m")
+        self.add_input("data:TLAR:range", np.nan, units="NM")
         self.add_input("settings:mission:sizing:breguet:climb_descent_distance", 500.0e3, units="m")
 
         self.add_output("data:mission:sizing:main_route:climb:distance", units="m", ref=1e3)
@@ -107,7 +107,7 @@ class BreguetWithPropulsion(om.ExplicitComponent):
             inputs["settings:mission:sizing:breguet:climb_descent_distance"],
         )
         breguet.compute(
-            inputs["data:weight:aircraft:MTOW"], inputs["data:TLAR:range"],
+            inputs["data:weight:aircraft:MTOW"], inputs["data:TLAR:range"] * nautical_mile,
         )
 
         outputs["data:propulsion:SFC"] = breguet.sfc
@@ -132,7 +132,7 @@ class _Consumption(om.ExplicitComponent):
 
     def setup(self):
         self.add_input("data:mission:sizing:fuel", np.nan, units="kg")
-        self.add_input("data:TLAR:range", np.nan, units="km")
+        self.add_input("data:TLAR:range", np.nan, units="NM")
         self.add_input("data:TLAR:NPAX", np.nan)
 
         self.add_output("data:mission:sizing:fuel:unitary", units="kg/km")
@@ -141,7 +141,7 @@ class _Consumption(om.ExplicitComponent):
     def compute(self, inputs, outputs, discrete_inputs=None, discrete_outputs=None):
         fuel = inputs["data:mission:sizing:fuel"]
         npax = inputs["data:TLAR:NPAX"]
-        distance = inputs["data:TLAR:range"]
+        distance = inputs["data:TLAR:range"] * nautical_mile / 1.0e3
 
         outputs["data:mission:sizing:fuel:unitary"] = fuel / npax / distance
 
@@ -200,7 +200,6 @@ class _FuelWeightFromMTOW(om.ExplicitComponent):
 
     def setup(self):
         self.add_input("data:TLAR:cruise_mach", np.nan)
-        self.add_input("data:TLAR:range", np.nan, units="m")
         self.add_input("data:aerodynamics:aircraft:cruise:L_D_max", np.nan)
         self.add_input("data:propulsion:SFC", np.nan, units="kg/N/s")
         self.add_input("data:weight:aircraft:MTOW", np.nan, units="kg")
@@ -251,7 +250,7 @@ class _Distances(om.ExplicitComponent):
     """
 
     def setup(self):
-        self.add_input("data:TLAR:range", np.nan, units="m")
+        self.add_input("data:TLAR:range", np.nan, units="NM")
         self.add_input("settings:mission:sizing:breguet:climb_descent_distance", 500.0e3, units="m")
 
         self.add_output("data:mission:sizing:main_route:climb:distance", units="m", ref=1e3)
@@ -259,7 +258,7 @@ class _Distances(om.ExplicitComponent):
         self.add_output("data:mission:sizing:main_route:descent:distance", units="m", ref=1e3)
 
     def compute(self, inputs, outputs, discrete_inputs=None, discrete_outputs=None):
-        flight_range = inputs["data:TLAR:range"]
+        flight_range = inputs["data:TLAR:range"] * nautical_mile
         climb_descent_distance = inputs["settings:mission:sizing:breguet:climb_descent_distance"]
 
         outputs["data:mission:sizing:main_route:cruise:distance"] = (

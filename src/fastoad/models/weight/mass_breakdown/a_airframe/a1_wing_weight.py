@@ -40,7 +40,7 @@ class WingWeight(om.ExplicitComponent):
         self.add_input("data:geometry:wing:area", val=np.nan, units="m**2")
         self.add_input("data:geometry:wing:span", val=np.nan, units="m")
         self.add_input("data:geometry:wing:root:chord", val=np.nan, units="m")
-        self.add_input("data:geometry:wing:sweep_25", val=np.nan, units="rad")
+        self.add_input("data:geometry:wing:sweep_25", val=np.nan, units="deg")
         self.add_input("data:geometry:wing:outer_area", val=np.nan, units="m**2")
         self.add_input("data:weight:aircraft:MTOW", val=np.nan, units="kg")
         self.add_input("data:weight:aircraft:MLW", val=np.nan, units="kg")
@@ -78,7 +78,7 @@ class WingWeight(om.ExplicitComponent):
         wing_area = inputs["data:geometry:wing:area"]
         span = inputs["data:geometry:wing:span"]
         l2_wing = inputs["data:geometry:wing:root:chord"]
-        sweep_25 = inputs["data:geometry:wing:sweep_25"]
+        sweep_25 = np.radians(inputs["data:geometry:wing:sweep_25"])
         cantilevered_area = inputs["data:geometry:wing:outer_area"]
         mtow = inputs["data:weight:aircraft:MTOW"]
         mlw = inputs["data:weight:aircraft:MLW"]

@@ -58,7 +58,7 @@ class SizingFlight(om.ExplicitComponent):
 
         # Inputs -----------------------------------------------------------------------------------
         self.add_input("data:TLAR:cruise_mach", np.nan)
-        self.add_input("data:TLAR:range", np.nan, units="m")
+        self.add_input("data:TLAR:range", np.nan, units="NM")
 
         self.add_input("data:geometry:propulsion:engine:count", 2)
         self.add_input("data:geometry:wing:area", np.nan, units="m**2")
@@ -161,7 +161,7 @@ class SizingFlight(om.ExplicitComponent):
 
         reference_area = inputs["data:geometry:wing:area"]
         cruise_mach = inputs["data:TLAR:cruise_mach"]
-        flight_distance = inputs["data:TLAR:range"]
+        flight_distance = inputs["data:TLAR:range"] * nautical_mile
         thrust_rates = {
             FlightPhase.CLIMB: inputs["data:mission:sizing:climb:thrust_rate"],
             FlightPhase.DESCENT: inputs["data:mission:sizing:descent:thrust_rate"],
