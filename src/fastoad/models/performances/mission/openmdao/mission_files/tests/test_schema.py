@@ -14,16 +14,13 @@
 import os.path as pth
 from collections import OrderedDict
 
-from ..schema import load_mission_file, _fieldify_dict
+from ..schema import load_mission_file
 
 DATA_FOLDER_PATH = pth.join(pth.dirname(__file__), "data")
-RESULTS_FOLDER_PATH = pth.join(pth.dirname(__file__), "results")
 
 
 def test_schema():
     d = load_mission_file(pth.join(DATA_FOLDER_PATH, "test.yml"))
-
-    print(_fieldify_dict(d))
     assert d == OrderedDict(
         [
             (
@@ -35,8 +32,8 @@ def test_schema():
                             OrderedDict(
                                 [
                                     ("engine_setting", "takeoff"),
-                                    ("polar", "data_aerodynamics_aircraft_takeoff"),
-                                    ("thrust_rate", "data_mission_sizing_climb_thrust_rate"),
+                                    ("polar", "data:aerodynamics:aircraft:takeoff"),
+                                    ("thrust_rate", "data:mission:sizing:climb:thrust_rate"),
                                     (
                                         "steps",
                                         [
@@ -51,7 +48,7 @@ def test_schema():
                                                                     "altitude",
                                                                     OrderedDict(
                                                                         [
-                                                                            ("value", "400"),
+                                                                            ("value", "400."),
                                                                             ("unit", "ft"),
                                                                         ]
                                                                     ),
@@ -78,7 +75,7 @@ def test_schema():
                                                                     "equivalent_airspeed",
                                                                     OrderedDict(
                                                                         [
-                                                                            ("value", "250"),
+                                                                            ("value", "250."),
                                                                             ("unit", "kn"),
                                                                         ]
                                                                     ),
@@ -99,7 +96,7 @@ def test_schema():
                                                                     "altitude",
                                                                     OrderedDict(
                                                                         [
-                                                                            ("value", "1500"),
+                                                                            ("value", "1500."),
                                                                             ("unit", "ft"),
                                                                         ]
                                                                     ),
@@ -125,8 +122,8 @@ def test_schema():
                             OrderedDict(
                                 [
                                     ("engine_setting", "climb"),
-                                    ("polar", "data_aerodynamics_aircraft_cruise"),
-                                    ("thrust_rate", "data_mission_sizing_climb_thrust_rate"),
+                                    ("polar", "data:aerodynamics:aircraft:cruise"),
+                                    ("thrust_rate", "data:mission:sizing:climb:thrust_rate"),
                                     (
                                         "steps",
                                         [
@@ -141,7 +138,7 @@ def test_schema():
                                                                     "altitude",
                                                                     OrderedDict(
                                                                         [
-                                                                            ("value", "10000"),
+                                                                            ("value", "10000."),
                                                                             ("unit", "ft"),
                                                                         ]
                                                                     ),
@@ -168,7 +165,7 @@ def test_schema():
                                                                     "equivalent_airspeed",
                                                                     OrderedDict(
                                                                         [
-                                                                            ("value", "300"),
+                                                                            ("value", "300."),
                                                                             ("unit", "kn"),
                                                                         ]
                                                                     ),
@@ -200,7 +197,7 @@ def test_schema():
                                                             ]
                                                         ),
                                                     ),
-                                                    ("maximum_mach", "data_TLAR_cruise_mach"),
+                                                    ("maximum_mach", "data:TLAR:cruise_mach"),
                                                 ]
                                             ),
                                         ],
@@ -213,8 +210,8 @@ def test_schema():
                             OrderedDict(
                                 [
                                     ("engine_setting", "idle"),
-                                    ("polar", "data_aerodynamics_aircraft_cruise"),
-                                    ("thrust_rate", "data_mission_sizing_descent_thrust_rate"),
+                                    ("polar", "data:aerodynamics:aircraft:cruise"),
+                                    ("thrust_rate", "data:mission:sizing:descent:thrust_rate"),
                                     (
                                         "steps",
                                         [
@@ -256,7 +253,7 @@ def test_schema():
                                                                     "altitude",
                                                                     OrderedDict(
                                                                         [
-                                                                            ("value", "10000"),
+                                                                            ("value", "10000."),
                                                                             ("unit", "ft"),
                                                                         ]
                                                                     ),
@@ -283,7 +280,7 @@ def test_schema():
                                                                     "equivalent_airspeed",
                                                                     OrderedDict(
                                                                         [
-                                                                            ("value", "250"),
+                                                                            ("value", "250."),
                                                                             ("unit", "kn"),
                                                                         ]
                                                                     ),
@@ -310,7 +307,7 @@ def test_schema():
                                                                     "altitude",
                                                                     OrderedDict(
                                                                         [
-                                                                            ("value", "1500"),
+                                                                            ("value", "1500."),
                                                                             ("unit", "ft"),
                                                                         ]
                                                                     ),
@@ -336,7 +333,7 @@ def test_schema():
                             "main_route",
                             OrderedDict(
                                 [
-                                    ("range", "data_TLAR_range"),
+                                    ("range", "data:TLAR:range"),
                                     (
                                         "steps",
                                         [
@@ -346,7 +343,7 @@ def test_schema():
                                                 [
                                                     ("range_step", "cruise"),
                                                     ("engine_setting", "cruise"),
-                                                    ("polar", "data_aerodynamics_aircraft_cruise"),
+                                                    ("polar", "data:aerodynamics:aircraft:cruise"),
                                                 ]
                                             ),
                                             OrderedDict([("step", "descent_phase")]),
@@ -359,7 +356,7 @@ def test_schema():
                             "diversion_route",
                             OrderedDict(
                                 [
-                                    ("range", "data_mission_sizing_diversion_distance"),
+                                    ("range", "data:mission:sizing:diversion:distance"),
                                     (
                                         "steps",
                                         [
@@ -368,7 +365,7 @@ def test_schema():
                                                 [
                                                     ("range_step", "cruise"),
                                                     ("engine_setting", "cruise"),
-                                                    ("polar", "data_aerodynamics_aircraft_cruise"),
+                                                    ("polar", "data:aerodynamics:aircraft:cruise"),
                                                 ]
                                             ),
                                             OrderedDict([("step", "descent_phase")]),

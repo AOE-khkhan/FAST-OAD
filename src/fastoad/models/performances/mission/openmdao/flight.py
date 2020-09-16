@@ -14,6 +14,7 @@
 import numpy as np
 import openmdao.api as om
 import pandas as pd
+from importlib_resources import path
 from scipy.constants import foot, nautical_mile
 
 from fastoad import BundleLoader
@@ -24,9 +25,21 @@ from fastoad.models.performances.breguet import Breguet
 from fastoad.models.performances.mission.segments.hold import HoldSegment
 from fastoad.models.performances.mission.segments.taxi import TaxiSegment
 from fastoad.models.propulsion.fuel_propulsion.base import FuelEngineSet
+from . import resources
+from .mission_files.schema import load_mission_file
 from ..flight.base import RangedFlight
 from ..flight.standard_flight import StandardFlight
 from ..polar import Polar
+
+
+class CustomFlight(om.ExplicitComponent):
+    def initialize(self):
+        default_mission_file_path = path(resources, "sizing_mission.yml")
+        self.options.declare("mission_file_path", types=str, default=default_mission_file_path)
+        self._file_content = None
+
+    def setup(self):
+        self._file_content = load_mission_file(self.options["mission_file_path"])
 
 
 class SizingFlight(om.ExplicitComponent):

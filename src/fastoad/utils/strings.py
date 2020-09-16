@@ -76,17 +76,6 @@ def get_float_list_from_string(text: str):
     return value1 if len(value1) > len(value2) else value2
 
 
-def fieldify(name: str) -> str:
-    """
-    Converts a string into a valid field name, i.e. replaces all spaces and
-    non-word characters with an underscore.
-
-    :param name: the string to fieldify
-    :return: the field version of `name`
-    """
-    return re.compile(r"[\W_]+").sub("_", name).strip("_")
-
-
 class FastCouldNotParseStringToArrayError(FastError):
     """ Raised when a conversion from string to array failed. """
 

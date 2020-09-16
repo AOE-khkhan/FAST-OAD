@@ -15,6 +15,7 @@ Basis for registering and retrieving services
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import logging
+import re
 from typing import List, Tuple, Set, Union, Optional, Any
 
 import pelix
@@ -24,7 +25,6 @@ from pelix.ipopo.constants import SERVICE_IPOPO, use_ipopo
 from pelix.ipopo.decorators import ComponentFactory, Provides, Property
 
 from .exceptions import FastDuplicateFactoryError
-from ..utils.strings import fieldify
 
 _LOGGER = logging.getLogger(__name__)
 """Logger for this module"""
@@ -141,7 +141,7 @@ class BundleLoader:
 
         if properties:
             for key, value in properties.items():
-                obj = Property(field="_" + fieldify(key), name=key, value=value)(obj)
+                obj = Property(field="_" + self._fieldify(key), name=key, value=value)(obj)
 
         factory = ComponentFactory(factory_name)(obj)
 
@@ -233,8 +233,7 @@ class BundleLoader:
         properties = self.get_factory_properties(factory_name)
         return properties.get(property_name)
 
-    @staticmethod
-    def get_instance_property(instance: Any, property_name: str) -> Any:
+    def get_instance_property(self, instance: Any, property_name: str) -> Any:
         """
 
         :param instance: any instance from :meth:~BundleLoader.instantiate_component
@@ -243,7 +242,7 @@ class BundleLoader:
         """
 
         try:
-            return getattr(instance, "_" + fieldify(property_name))
+            return getattr(instance, "_" + self._fieldify(property_name))
         except AttributeError:
             return None
 
@@ -316,3 +315,14 @@ class BundleLoader:
 
         references = self.context.get_all_service_references(service_name, ldap_filter)
         return references
+
+    @staticmethod
+    def _fieldify(name: str) -> str:
+        """
+        Converts a string into a valid field name, i.e. replaces all spaces and
+        non-word characters with an underscore.
+
+        :param name: the string to fieldify
+        :return: the field version of `name`
+        """
+        return re.compile(r"[\W_]+").sub("_", name).strip("_")

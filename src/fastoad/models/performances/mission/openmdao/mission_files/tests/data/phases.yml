@@ -1,0 +1,102 @@
+phase definitions:
+  initial climb phase:
+    engine setting: takeoff
+    polar: data:aerodynamics:aircraft:takeoff
+    thrust rate: data:mission:sizing:climb:thrust_rate
+    steps:
+      - step: climb
+        target:
+          altitude:
+            value: 400.
+            unit: ft
+          equivalent airspeed:
+            value: constant
+      - step: acceleration
+        target:
+          equivalent airspeed: inital_climb:final_equivalent_airspeed
+      - step: climb
+        polar: data:aerodynamics:aircraft:low_speed
+        target:
+          altitude: inital_climb:final_altitude
+          equivalent airspeed:
+            value: constant
+#  climb phase:
+#    engine setting: climb
+#    polar: data:aerodynamics:aircraft:cruise
+#    thrust rate: data:mission:sizing:climb:thrust_rate
+#    steps:
+#      - step: climb
+#        target:
+#          altitude:
+#            value: 10000.
+#            unit: ft
+#          equivalent airspeed:
+#            value: constant
+#      - step: acceleration
+#        target:
+#          equivalent airspeed:
+#            value: 300.
+#            unit: kn
+#      - step: climb
+#        target:
+#          equivalent airspeed:
+#            value: constant
+#          altitude:
+#            value: optimal
+#        maximum mach: data:TLAR:cruise_mach
+#  descent phase:
+#    engine setting: idle
+#    polar: data:aerodynamics:aircraft:cruise
+#    thrust rate: data:mission:sizing:descent:thrust_rate
+#    steps:
+#      - step: descent
+#        target:
+#          equivalent airspeed:
+#            value: 300
+#            unit: kn
+#          mach:
+#            value: constant
+#      - step: descent
+#        target:
+#          altitude:
+#            value: 10000.
+#            unit: ft
+#          equivalent airspeed:
+#            value: constant
+#      - step: deceleration
+#        target:
+#          equivalent airspeed:
+#            value: 250.
+#            unit: kn
+#      - step: descent
+#        target:
+#          equivalent airspeed:
+#            value: constant
+#          altitude:
+#            value: 1500.
+#            unit: ft
+
+route definitions:
+  main route:
+    range: data:TLAR:range
+    steps:
+      - step: initial climb phase
+#      - step: climb phase
+      - range step: cruise
+        engine setting: cruise
+        polar: data:aerodynamics:aircraft:cruise
+#      - step: descent phase
+
+#  diversion route:
+#    range: data:mission:sizing:diversion:distance
+#    steps:
+#      - step: climb phase
+#      - range step: cruise
+#        engine setting: cruise
+#        polar: data:aerodynamics:aircraft:cruise
+#      - step: descent phase
+
+flight:
+  steps:
+  - step: main route
+#  - step: diversion route

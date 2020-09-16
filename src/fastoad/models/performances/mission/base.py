@@ -16,6 +16,7 @@ from abc import ABC, abstractmethod
 from typing import List, Union
 
 import pandas as pd
+
 from fastoad.base.flight_point import FlightPoint
 from fastoad.models.performances.mission.polar import Polar
 from fastoad.models.propulsion import IPropulsion
@@ -65,6 +66,15 @@ class AbstractFlightSequence(IFlightPart):
 
         :return: the list of IFlightPart instances for the mission.
         """
+
+
+class FlightSequence(AbstractFlightSequence):
+    def __init__(self):
+        self._flight_sequence = []
+
+    @property
+    def flight_sequence(self) -> List[Union[IFlightPart, str]]:
+        return self._flight_sequence
 
 
 class AbstractManualThrustFlightPhase(AbstractFlightSequence, ABC):
