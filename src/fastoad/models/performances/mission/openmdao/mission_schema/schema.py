@@ -11,8 +11,13 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+from collections import OrderedDict
+from typing import List
+
 from ensure import Ensure
 from strictyaml import load, Map, MapPattern, Optional, Str, Float, Seq, Any
+
+from fastoad.utils.strings import fieldify
 
 BASE_STEP_NAMES = {"climb", "cruise", "descent", "acceleration", "deceleration"}
 
@@ -81,8 +86,32 @@ def load_mission_file(file_path: str) -> dict:
     flight_routes = [step["step"] for step in content["flight"]["steps"]]
     Ensure(flight_routes).contains_only(content["route definitions"].keys())
 
-    return content.data
+    return _fieldify_dict(content.data)
 
 
-if __name__ == "__main__":
-    print(load_mission_file("tests/test.yml"))
+def _fieldify_dict(my_dict: dict) -> dict:
+    new_dict = OrderedDict()
+    for key, val in my_dict.items():
+        if isinstance(key, str):
+            new_key = fieldify(key)
+        else:
+            new_key = key
+        new_val = _fieldify_value(val)
+        new_dict[new_key] = new_val
+    return new_dict
+
+
+def _fieldify_list(my_list: List) -> List:
+    return [_fieldify_value(val) for val in my_list]
+
+
+def _fieldify_value(val):
+    if isinstance(val, str):
+        new_val = fieldify(val)
+    elif isinstance(val, dict):
+        new_val = _fieldify_dict(val)
+    elif isinstance(val, list):
+        new_val = _fieldify_list(val)
+    else:
+        new_val = val
+    return new_val

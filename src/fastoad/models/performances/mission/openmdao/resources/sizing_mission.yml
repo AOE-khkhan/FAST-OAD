@@ -2,7 +2,7 @@ phase definitions:
   initial climb phase:
     engine setting: takeoff
     polar: data:aerodynamics:aircraft:takeoff
-    thrust rate: data:mission:sizing:climb:thrust rate
+    thrust rate: data:mission:sizing:climb:thrust_rate
     steps:
       - step: climb
         target:
@@ -17,6 +17,7 @@ phase definitions:
             value: 250.
             unit: kn
       - step: climb
+#        polar: data:aerodynamics:aircraft:low_speed
         target:
           altitude:
             value: 1500.
@@ -26,7 +27,7 @@ phase definitions:
   climb phase:
     engine setting: climb
     polar: data:aerodynamics:aircraft:cruise
-    thrust rate: data:mission:sizing:climb:thrust rate
+    thrust rate: data:mission:sizing:climb:thrust_rate
     steps:
       - step: climb
         target:
@@ -46,11 +47,11 @@ phase definitions:
             value: constant
           altitude:
             value: optimal
-        maximum mach: data:TLAR:cruise mach
+        maximum mach: data:TLAR:cruise_mach
   descent phase:
     engine setting: idle
     polar: data:aerodynamics:aircraft:cruise
-    thrust rate: data:mission:sizing:descent:thrust rate
+    thrust rate: data:mission:sizing:descent:thrust_rate
     steps:
       - step: descent
         target:
