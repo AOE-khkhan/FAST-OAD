@@ -23,7 +23,7 @@ from ....mission.segments.altitude_change import AltitudeChangeSegment
 RANGE_STEP_TAG = "range_step"
 STEPS_TAG = "steps"
 STEP_TAG = "step"
-FLIGHT_DEFINITION_TAG = "flight"
+MISSION_DEFINITION_TAG = "mission"
 ROUTE_DEFINITIONS_TAG = "route_definitions"
 PHASE_DEFINITIONS_TAG = "phase_definitions"
 
@@ -79,7 +79,7 @@ SCHEMA = Map(
     {
         PHASE_DEFINITIONS_TAG: MapPattern(Str(), Map(BASE_STEP_SCHEMA_DICT)),
         ROUTE_DEFINITIONS_TAG: MapPattern(Str(), Map(ROUTE_SCHEMA_DICT)),
-        FLIGHT_DEFINITION_TAG: Map({STEPS_TAG: Seq(Map({STEP_TAG: Str()}))}),
+        MISSION_DEFINITION_TAG: Map({"name": Str(), STEPS_TAG: Seq(Map({STEP_TAG: Str()}))}),
     }
 )
 
@@ -113,7 +113,7 @@ def load_mission_file(file_path: str) -> dict:
                 step.revalidate(Map(RANGE_STEP_SCHEMA_DICT))
         Ensure(range_step_count).equals(1)
 
-    flight_routes = [step[STEP_TAG] for step in content[FLIGHT_DEFINITION_TAG][STEPS_TAG]]
+    flight_routes = [step[STEP_TAG] for step in content[MISSION_DEFINITION_TAG][STEPS_TAG]]
     Ensure(flight_routes).contains_only(content[ROUTE_DEFINITIONS_TAG].keys())
 
     return content.data

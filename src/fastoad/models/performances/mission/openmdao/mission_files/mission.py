@@ -19,11 +19,15 @@ from fastoad.base.flight_point import FlightPoint
 from fastoad.models.propulsion import IPropulsion
 from .schema import (
     PHASE_DEFINITIONS_TAG,
+    ROUTE_DEFINITIONS_TAG,
+    STEP_TAG,
     STEPS_TAG,
     BaseStepNames,
-    STEP_TAG,
     load_mission_file,
+    RANGE_STEP_TAG,
+    MISSION_DEFINITION_TAG,
 )
+from ...flight.base import RangedFlight, SimpleFlight
 from ....mission.base import FlightSequence
 
 BASE_UNITS = {"altitude": "m", "true_airspeed": "m/s", "equivalent_airspeed": "m/s", "range": "m"}
@@ -41,6 +45,7 @@ class Mission:
         else:
             self._mission_definition = mission_definition
         self._inputs = {}
+        self._outputs = {}
         self._phases = {}
         self._routes = {}
         self._flight = []
@@ -63,10 +68,24 @@ class Mission:
             for value in struct:
                 self.find_inputs(value)
 
+    def find_outputs(self):
+        mission_name = self._mission_definition[MISSION_DEFINITION_TAG]["name"]
+        for route_name, definition in self._mission_definition[ROUTE_DEFINITIONS_TAG].items():
+            for step_definition in definition[STEPS_TAG]:
+                if STEP_TAG in step_definition:
+                    phase_name = step_definition[STEP_TAG]
+                else:
+                    phase_name = "cruise"
+                var_name_root = "data:mission:%s:%s:%s:" % (mission_name, route_name, phase_name)
+                self._outputs[var_name_root + "duration"] = "s"
+                self._outputs[var_name_root + "fuel"] = "kg"
+                self._outputs[var_name_root + "distance"] = "m"
+
     def build_phases(self, inputs: Mapping):
         for phase_name, definition in self._mission_definition[PHASE_DEFINITIONS_TAG].items():
             phase = FlightSequence()
             kwargs = {name: value for name, value in definition.items() if name != STEPS_TAG}
+            kwargs["name"] = phase_name
 
             for step_definition in definition[STEPS_TAG]:
                 segment_class = BaseStepNames.get_segment_class(step_definition[STEP_TAG])
@@ -78,23 +97,13 @@ class Mission:
 
                 for key, value in step_kwargs.items():
                     if key == "target":
-                        print("FOO", key, value)
                         for target_key, target_value in value.items():
-                            print("BAR", target_key, target_value)
                             if isinstance(target_value, dict) and "value" in target_value:
-                                print(
-                                    "BAZ",
-                                    target_value["value"],
-                                    target_value.get("unit"),
-                                    BASE_UNITS.get(target_key),
-                                )
-                                print(value[target_key])
                                 value[target_key] = om.convert_units(
                                     target_value["value"],
                                     target_value.get("unit"),
                                     BASE_UNITS.get(target_key),
                                 )
-                                print(value[target_key])
                         step_kwargs[key] = FlightPoint(**value)
                     elif isinstance(value, str) and ":" in value:
                         step_kwargs[key] = inputs[value]
@@ -105,8 +114,26 @@ class Mission:
                 phase.flight_sequence.append(segment)
             self._phases[phase_name] = phase
 
-    def build_routes(self):
-        pass
+    def build_routes(self, inputs):
+        for route_name, definition in self._mission_definition[ROUTE_DEFINITIONS_TAG].items():
+            climb_phases = []
+            descent_phases = []
+            climb = True
+            for step_definition in definition[STEPS_TAG]:
+                if STEP_TAG in step_definition:
+                    if climb:
+                        climb_phases.append(self._phases[step_definition[STEP_TAG]])
+                    else:
+                        descent_phases.append(self._phases[step_definition[STEP_TAG]])
+                else:
+                    # Schema ensures there is one and only one RANGE_STEP_TAG
+                    cruise_phase = self._phases[step_definition[RANGE_STEP_TAG]]
+
+            sequence = SimpleFlight(0.0, climb_phases, cruise_phase, descent_phases)
+            flight_range = definition["range"]
+            if isinstance(flight_range, str):
+                flight_range = inputs[definition["range"]]
+            self._routes[route_name] = RangedFlight(sequence, flight_range)
 
     def build_mission(self):
         pass

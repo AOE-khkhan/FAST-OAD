@@ -137,5 +137,8 @@ def test_schema():
                 ],
             },
         },
-        "flight": {"steps": [{"step": "main_route"}, {"step": "diversion_route"}]},
+        "mission": {
+            "name": "sizing",
+            "steps": [{"step": "main_route"}, {"step": "diversion_route"}],
+        },
     }

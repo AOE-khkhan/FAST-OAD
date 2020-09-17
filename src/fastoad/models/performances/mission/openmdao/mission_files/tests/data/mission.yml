@@ -96,7 +96,8 @@ route_definitions:
         polar: data:aerodynamics:aircraft:cruise
       - step: descent_phase
 
-flight:
+mission:
+  name: sizing
   steps:
-    - step: main_route
-    - step: diversion_route
+  -  step: main_route
+  -  step: diversion_route
