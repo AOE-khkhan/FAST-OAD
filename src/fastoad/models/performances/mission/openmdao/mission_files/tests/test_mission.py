@@ -12,7 +12,6 @@
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import os.path as pth
-from collections import OrderedDict
 
 from ..mission import Mission
 
@@ -20,74 +19,44 @@ DATA_FOLDER_PATH = pth.join(pth.dirname(__file__), "data")
 
 
 def test_inputs():
-    mission_definition = OrderedDict(
-        {
-            "phase_definitions": OrderedDict(
-                {
-                    "initial_climb_phase": OrderedDict(
-                        {
-                            "engine_setting": "takeoff",
-                            "polar": "data:aerodynamics:aircraft:takeoff",
-                            "thrust_rate": "data:mission:sizing:climb:thrust_rate",
-                            "steps": [
-                                OrderedDict(
-                                    {
-                                        "step": "climb",
-                                        "target": OrderedDict(
-                                            {
-                                                "altitude": OrderedDict(
-                                                    {"value": "400", "unit": "ft"}
-                                                ),
-                                                "equivalent_airspeed": OrderedDict(
-                                                    {"value": "constant"}
-                                                ),
-                                            },
-                                        ),
-                                    }
-                                ),
-                                OrderedDict(
-                                    {
-                                        "step": "acceleration",
-                                        "target": OrderedDict(
-                                            {
-                                                "equivalent_airspeed": "initial_climb:final_equivalent_airspeed",
-                                            }
-                                        ),
-                                    }
-                                ),
-                                OrderedDict(
-                                    {
-                                        "step": "climb",
-                                        "polar": "data:aerodynamics:aircraft:low_speed",
-                                        "target": OrderedDict(
-                                            {
-                                                "altitude": "initial_climb:final_altitude",
-                                                "equivalent_airspeed": OrderedDict(
-                                                    {"value": "constant"}
-                                                ),
-                                            }
-                                        ),
-                                    }
-                                ),
-                            ],
-                        }
-                    ),
-                }
-            ),
-        }
-    )
-
-    print(mission_definition)
-    mission = Mission(mission_definition)
-
+    mission = Mission(pth.join(DATA_FOLDER_PATH, "phases.yml"))
     mission.find_inputs()
-
     assert mission._inputs == {
-        "data:aerodynamics:aircraft:takeoff:CL": None,
-        "data:aerodynamics:aircraft:takeoff:CD": None,
-        "data:mission:sizing:climb:thrust_rate": None,
-        "data:aerodynamics:aircraft:low_speed:CL": None,
         "data:aerodynamics:aircraft:low_speed:CD": None,
+        "data:aerodynamics:aircraft:low_speed:CL": None,
+        "data:aerodynamics:aircraft:takeoff:CD": None,
+        "data:aerodynamics:aircraft:takeoff:CL": None,
+        "data:mission:sizing:climb:thrust_rate": None,
         "initial_climb:final_altitude": "m",
         "initial_climb:final_equivalent_airspeed": "m/s",
     }
+
+    mission = Mission(pth.join(DATA_FOLDER_PATH, "mission.yml"))
+    mission.find_inputs()
+    assert mission._inputs == {
+        "data:TLAR:cruise_mach": None,
+        "data:TLAR:range": "m",
+        "data:aerodynamics:aircraft:cruise:CD": None,
+        "data:aerodynamics:aircraft:cruise:CL": None,
+        "data:aerodynamics:aircraft:takeoff:CD": None,
+        "data:aerodynamics:aircraft:takeoff:CL": None,
+        "data:mission:sizing:climb:thrust_rate": None,
+        "data:mission:sizing:descent:thrust_rate": None,
+        "data:mission:sizing:diversion:distance": "m",
+    }
+
+
+def test_build_phase():
+    mission = Mission(pth.join(DATA_FOLDER_PATH, "phases.yml"))
+    mission.find_inputs()
+
+    inputs = {
+        "data:aerodynamics:aircraft:low_speed:CD": [0.0, 0.5, 1.0],
+        "data:aerodynamics:aircraft:low_speed:CL": [0.0, 0.5, 1.0],
+        "data:aerodynamics:aircraft:takeoff:CD": [0.0, 0.5, 1.0],
+        "data:aerodynamics:aircraft:takeoff:CL": [0.0, 0.5, 1.0],
+        "data:mission:sizing:climb:thrust_rate": 0.6,
+        "initial_climb:final_altitude": 500,
+        "initial_climb:final_equivalent_airspeed": 130.0,
+    }
+    mission.build_phases(inputs)

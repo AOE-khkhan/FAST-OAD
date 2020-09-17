@@ -20,7 +20,7 @@ DATA_FOLDER_PATH = pth.join(pth.dirname(__file__), "data")
 
 
 def test_schema():
-    d = load_mission_file(pth.join(DATA_FOLDER_PATH, "test.yml"))
+    d = load_mission_file(pth.join(DATA_FOLDER_PATH, "mission.yml"))
     assert d == OrderedDict(
         [
             (

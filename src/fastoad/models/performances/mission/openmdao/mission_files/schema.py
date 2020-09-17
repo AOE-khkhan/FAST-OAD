@@ -11,10 +11,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import re
-from collections import OrderedDict
 from enum import Enum
-from typing import List
 
 from ensure import Ensure
 from strictyaml import load, Map, MapPattern, Optional, Str, Float, Seq, Any
@@ -23,12 +20,12 @@ from ...segments.cruise import CruiseSegment
 from ...segments.speed_change import SpeedChangeSegment
 from ....mission.segments.altitude_change import AltitudeChangeSegment
 
-RANGE_STEP_TAG = "range step"
+RANGE_STEP_TAG = "range_step"
 STEPS_TAG = "steps"
 STEP_TAG = "step"
 FLIGHT_DEFINITION_TAG = "flight"
-ROUTE_DEFINITIONS_TAG = "route definitions"
-PHASE_DEFINITIONS_TAG = "phase definitions"
+ROUTE_DEFINITIONS_TAG = "route_definitions"
+PHASE_DEFINITIONS_TAG = "phase_definitions"
 
 
 class BaseStepNames(Enum):
@@ -60,20 +57,20 @@ TARGET_SCHEMA = MapPattern(
 
 BASE_STEP_SCHEMA_DICT = {
     Optional("target", default=None): TARGET_SCHEMA,
-    Optional("engine setting", default=None): Str(),
+    Optional("engine_setting", default=None): Str(),
     Optional("polar", default=None): Str(),
-    Optional("thrust rate", default=None): Str() | Float(),
-    Optional("time step", default=None): Float(),
+    Optional("thrust_rate", default=None): Str() | Float(),
+    Optional("time_step", default=None): Float(),
     Optional("steps", default=None): Seq(Any()),
 }
 
 STEP_SCHEMA_DICT = {STEP_TAG: Str()}
 STEP_SCHEMA_DICT.update(BASE_STEP_SCHEMA_DICT)
 
-RANGE_STEP_SCHEMA_DICT = {"range step": Str()}
+RANGE_STEP_SCHEMA_DICT = {RANGE_STEP_TAG: Str()}
 RANGE_STEP_SCHEMA_DICT.update(BASE_STEP_SCHEMA_DICT)
 
-CLIMB_STEP_SCHEMA_DICT = {Optional("maximum mach", default=None): Str() | Float()}
+CLIMB_STEP_SCHEMA_DICT = {Optional("maximum_mach", default=None): Str() | Float()}
 CLIMB_STEP_SCHEMA_DICT.update(STEP_SCHEMA_DICT)
 
 ROUTE_SCHEMA_DICT = {"range": Str() | Float(), STEPS_TAG: Seq(Any())}
@@ -119,36 +116,4 @@ def load_mission_file(file_path: str) -> dict:
     flight_routes = [step[STEP_TAG] for step in content[FLIGHT_DEFINITION_TAG][STEPS_TAG]]
     Ensure(flight_routes).contains_only(content[ROUTE_DEFINITIONS_TAG].keys())
 
-    return _process_strings_in_dict(content.data)
-
-
-def _process_strings_in_dict(my_dict: dict) -> dict:
-    new_dict = OrderedDict()
-    for key, val in my_dict.items():
-        if isinstance(key, str):
-            new_key = _process_string(key)
-        else:
-            new_key = key
-        new_val = _process_string_value(val)
-        new_dict[new_key] = new_val
-    return new_dict
-
-
-def _process_strings_in_list(my_list: List) -> List:
-    return [_process_string_value(val) for val in my_list]
-
-
-def _process_string_value(val):
-    if isinstance(val, str):
-        new_val = _process_string(val)
-    elif isinstance(val, dict):
-        new_val = _process_strings_in_dict(val)
-    elif isinstance(val, list):
-        new_val = _process_strings_in_list(val)
-    else:
-        new_val = val
-    return new_val
-
-
-def _process_string(name: str) -> str:
-    return re.compile(r"[\s_]+").sub("_", name).strip("_")
+    return content.data

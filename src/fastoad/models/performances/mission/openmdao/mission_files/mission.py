@@ -11,7 +11,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from typing import Mapping
+from typing import Mapping, Union
 
 import openmdao.api as om
 
@@ -20,6 +20,7 @@ from .schema import (
     STEPS_TAG,
     BaseStepNames,
     STEP_TAG,
+    load_mission_file,
 )
 from ....mission.base import FlightSequence
 
@@ -27,9 +28,12 @@ BASE_UNITS = {"altitude": "m", "true_airspeed": "m/s", "equivalent_airspeed": "m
 
 
 class Mission:
-    def __init__(self, mission_definition):
+    def __init__(self, mission_definition: Union[dict, str]):
         self._input_map = {}
-        self._mission_definition = mission_definition
+        if isinstance(mission_definition, str):
+            self._mission_definition = load_mission_file(mission_definition)
+        else:
+            self._mission_definition = mission_definition
         self._inputs = {}
         self._phases = {}
         self._routes = {}
@@ -56,19 +60,19 @@ class Mission:
     def build_phases(self, inputs: Mapping):
         for phase_name, definition in self._mission_definition[PHASE_DEFINITIONS_TAG].items():
             phase = FlightSequence()
-            kwargs = {name: value for name, value in definition.items if name != STEPS_TAG}
+            kwargs = {name: value for name, value in definition.items() if name != STEPS_TAG}
 
             for step_definition in definition[STEPS_TAG]:
                 segment_class = BaseStepNames.get_segment_class(step_definition[STEP_TAG])
                 step_kwargs = kwargs.copy()
                 step_kwargs.update(
-                    {name: value for name, value in step_definition.items if name != STEP_TAG}
+                    {name: value for name, value in step_definition.items() if name != STEP_TAG}
                 )
 
                 for key, value in step_kwargs.items():
-                    if isinstance(value, dict):
+                    if isinstance(value, dict) and "value" in value:
                         step_kwargs[key] = om.convert_units(
-                            value["value"], value["unit"], BASE_UNITS.get(key)
+                            value["value"], value.get("unit"), BASE_UNITS.get(key)
                         )
                     elif isinstance(value, str) and ":" in value:
                         step_kwargs[key] = inputs[value]
