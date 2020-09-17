@@ -26,10 +26,11 @@ DATA_FOLDER_PATH = pth.join(pth.dirname(__file__), "data")
 
 
 def test_inputs():
-    mission = Mission(pth.join(DATA_FOLDER_PATH, "phases.yml"), Mock(IPropulsion), 100.0)
+    mission = Mission(pth.join(DATA_FOLDER_PATH, "mission.yml"), Mock(IPropulsion), 100.0)
     mission.find_inputs()
     assert mission._inputs == {
         "data:TLAR:cruise_mach": None,
+        "data:TLAR:range": "m",
         "data:aerodynamics:aircraft:cruise:CD": None,
         "data:aerodynamics:aircraft:cruise:CL": None,
         "data:aerodynamics:aircraft:low_speed:CD": None,
@@ -38,27 +39,14 @@ def test_inputs():
         "data:aerodynamics:aircraft:takeoff:CL": None,
         "data:mission:sizing:climb:thrust_rate": None,
         "data:mission:sizing:descent:thrust_rate": None,
+        "data:mission:sizing:diversion:distance": "m",
         "initial_climb:final_altitude": "m",
         "initial_climb:final_equivalent_airspeed": "m/s",
     }
 
+
+def test_build_phases():
     mission = Mission(pth.join(DATA_FOLDER_PATH, "mission.yml"), Mock(IPropulsion), 100.0)
-    mission.find_inputs()
-    assert mission._inputs == {
-        "data:TLAR:cruise_mach": None,
-        "data:TLAR:range": "m",
-        "data:aerodynamics:aircraft:cruise:CD": None,
-        "data:aerodynamics:aircraft:cruise:CL": None,
-        "data:aerodynamics:aircraft:takeoff:CD": None,
-        "data:aerodynamics:aircraft:takeoff:CL": None,
-        "data:mission:sizing:climb:thrust_rate": None,
-        "data:mission:sizing:descent:thrust_rate": None,
-        "data:mission:sizing:diversion:distance": "m",
-    }
-
-
-def test_build_phase():
-    mission = Mission(pth.join(DATA_FOLDER_PATH, "phases.yml"), Mock(IPropulsion), 100.0)
     mission.find_inputs()
 
     inputs = {
@@ -85,3 +73,7 @@ def test_build_phase():
     assert steps[0].target.altitude == pytest.approx(400 * foot)
     assert steps[0].target.equivalent_airspeed == "constant"
     assert steps[1].target.equivalent_airspeed == "initial_climb:final_equivalent_airspeed"
+
+
+def test_build_routes():
+    pass

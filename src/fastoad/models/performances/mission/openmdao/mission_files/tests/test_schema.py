@@ -10,7 +10,7 @@
 #  GNU General Public License for more details.
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
-import json
+
 import os.path as pth
 
 from ..schema import load_mission_file
@@ -20,7 +20,6 @@ DATA_FOLDER_PATH = pth.join(pth.dirname(__file__), "data")
 
 def test_schema():
     d = load_mission_file(pth.join(DATA_FOLDER_PATH, "mission.yml"))
-    print(json.dumps(d))
 
     assert d == {
         "phase_definitions": {
@@ -38,12 +37,15 @@ def test_schema():
                     },
                     {
                         "step": "acceleration",
-                        "target": {"equivalent_airspeed": {"value": 250.0, "unit": "kn"}},
+                        "target": {
+                            "equivalent_airspeed": "initial_climb:final_equivalent_airspeed"
+                        },
                     },
                     {
                         "step": "climb",
+                        "polar": "data:aerodynamics:aircraft:low_speed",
                         "target": {
-                            "altitude": {"value": 1500.0, "unit": "ft"},
+                            "altitude": "initial_climb:final_altitude",
                             "equivalent_airspeed": {"value": "constant"},
                         },
                     },

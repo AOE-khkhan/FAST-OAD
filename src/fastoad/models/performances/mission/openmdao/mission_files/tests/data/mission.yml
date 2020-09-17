@@ -13,15 +13,11 @@ phase_definitions:
             value: constant
       - step: acceleration
         target:
-          equivalent_airspeed:
-            value: 250.
-            unit: kn
+          equivalent_airspeed: initial_climb:final_equivalent_airspeed
       - step: climb
-#        polar: data:aerodynamics:aircraft:low_speed
+        polar: data:aerodynamics:aircraft:low_speed
         target:
-          altitude:
-            value: 1500.
-            unit: ft
+          altitude: initial_climb:final_altitude
           equivalent_airspeed:
             value: constant
   climb_phase:
@@ -102,5 +98,5 @@ route_definitions:
 
 flight:
   steps:
-  - step: main_route
-  - step: diversion_route
+    - step: main_route
+    - step: diversion_route
