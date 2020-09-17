@@ -20,61 +20,61 @@ phase_definitions:
           altitude: initial_climb:final_altitude
           equivalent_airspeed:
             value: constant
-#  climb_phase:
-#    engine_setting: climb
-#    polar: data:aerodynamics:aircraft:cruise
-#    thrust_rate: data:mission:sizing:climb:thrust_rate
-#    steps:
-#      - step: climb
-#        target:
-#          altitude:
-#            value: 10000.
-#            unit: ft
-#          equivalent_airspeed:
-#            value: constant
-#      - step: acceleration
-#        target:
-#          equivalent_airspeed:
-#            value: 300.
-#            unit: kn
-#      - step: climb
-#        target:
-#          equivalent_airspeed:
-#            value: constant
-#          altitude:
-#            value: optimal
-#        maximum_mach: data:TLAR:cruise_mach
-#  descent_phase:
-#    engine_setting: idle
-#    polar: data:aerodynamics:aircraft:cruise
-#    thrust_rate: data:mission:sizing:descent:thrust_rate
-#    steps:
-#      - step: descent
-#        target:
-#          equivalent_airspeed:
-#            value: 300
-#            unit: kn
-#          mach:
-#            value: constant
-#      - step: descent
-#        target:
-#          altitude:
-#            value: 10000.
-#            unit: ft
-#          equivalent_airspeed:
-#            value: constant
-#      - step: deceleration
-#        target:
-#          equivalent_airspeed:
-#            value: 250.
-#            unit: kn
-#      - step: descent
-#        target:
-#          equivalent_airspeed:
-#            value: constant
-#          altitude:
-#            value: 1500.
-#            unit: ft
+  climb_phase:
+    engine_setting: climb
+    polar: data:aerodynamics:aircraft:cruise
+    thrust_rate: data:mission:sizing:climb:thrust_rate
+    steps:
+      - step: climb
+        target:
+          altitude:
+            value: 10000.
+            unit: ft
+          equivalent_airspeed:
+            value: constant
+      - step: acceleration
+        target:
+          equivalent_airspeed:
+            value: 300.
+            unit: kn
+      - step: climb
+        target:
+          equivalent_airspeed:
+            value: constant
+          altitude:
+            value: optimal
+        maximum_mach: data:TLAR:cruise_mach
+  descent_phase:
+    engine_setting: idle
+    polar: data:aerodynamics:aircraft:cruise
+    thrust_rate: data:mission:sizing:descent:thrust_rate
+    steps:
+      - step: descent
+        target:
+          equivalent_airspeed:
+            value: 300
+            unit: kn
+          mach:
+            value: constant
+      - step: descent
+        target:
+          altitude:
+            value: 10000.
+            unit: ft
+          equivalent_airspeed:
+            value: constant
+      - step: deceleration
+        target:
+          equivalent_airspeed:
+            value: 250.
+            unit: kn
+      - step: descent
+        target:
+          equivalent_airspeed:
+            value: constant
+          altitude:
+            value: 1500.
+            unit: ft
 
 route_definitions:
   main_route:

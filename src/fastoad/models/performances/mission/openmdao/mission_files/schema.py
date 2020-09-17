@@ -52,7 +52,7 @@ class BaseStepNames(Enum):
 
 
 TARGET_SCHEMA = MapPattern(
-    Str(), Str() | Map({"value": Str() | Float(), Optional("unit", default=None): Str()})
+    Str(), Str() | Map({"value": Float() | Str(), Optional("unit", default=None): Str()})
 )
 
 BASE_STEP_SCHEMA_DICT = {

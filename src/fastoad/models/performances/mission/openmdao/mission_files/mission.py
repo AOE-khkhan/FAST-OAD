@@ -15,6 +15,8 @@ from typing import Mapping, Union
 
 import openmdao.api as om
 
+from fastoad.base.flight_point import FlightPoint
+from fastoad.models.propulsion import IPropulsion
 from .schema import (
     PHASE_DEFINITIONS_TAG,
     STEPS_TAG,
@@ -28,8 +30,12 @@ BASE_UNITS = {"altitude": "m", "true_airspeed": "m/s", "equivalent_airspeed": "m
 
 
 class Mission:
-    def __init__(self, mission_definition: Union[dict, str]):
+    def __init__(
+        self, mission_definition: Union[dict, str], propulsion: IPropulsion, reference_area: float
+    ):
+        self._base_kwargs = {"reference_area": reference_area, "propulsion": propulsion}
         self._input_map = {}
+
         if isinstance(mission_definition, str):
             self._mission_definition = load_mission_file(mission_definition)
         else:
@@ -68,14 +74,32 @@ class Mission:
                 step_kwargs.update(
                     {name: value for name, value in step_definition.items() if name != STEP_TAG}
                 )
+                step_kwargs.update(self._base_kwargs)
 
                 for key, value in step_kwargs.items():
-                    if isinstance(value, dict) and "value" in value:
-                        step_kwargs[key] = om.convert_units(
-                            value["value"], value.get("unit"), BASE_UNITS.get(key)
-                        )
+                    if key == "target":
+                        print("FOO", key, value)
+                        for target_key, target_value in value.items():
+                            print("BAR", target_key, target_value)
+                            if isinstance(target_value, dict) and "value" in target_value:
+                                print(
+                                    "BAZ",
+                                    target_value["value"],
+                                    target_value.get("unit"),
+                                    BASE_UNITS.get(target_key),
+                                )
+                                print(value[target_key])
+                                value[target_key] = om.convert_units(
+                                    target_value["value"],
+                                    target_value.get("unit"),
+                                    BASE_UNITS.get(target_key),
+                                )
+                                print(value[target_key])
+                        step_kwargs[key] = FlightPoint(**value)
                     elif isinstance(value, str) and ":" in value:
                         step_kwargs[key] = inputs[value]
+                    else:
+                        step_kwargs[key] = value
 
                 segment = segment_class(**step_kwargs)
                 phase.flight_sequence.append(segment)
