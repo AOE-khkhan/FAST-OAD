@@ -45,6 +45,7 @@ class SimpleFlight(FlightSequence):
         :param climb_phases:
         :param cruise_phase:
         :param descent_phases:
+        :param name:
         """
         super().__init__()
         self.climb_phases = climb_phases
