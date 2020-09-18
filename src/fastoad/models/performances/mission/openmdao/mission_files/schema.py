@@ -17,7 +17,9 @@ from ensure import Ensure
 from strictyaml import load, Map, MapPattern, Optional, Str, Float, Seq, Any
 
 from ...segments.cruise import CruiseSegment
+from ...segments.hold import HoldSegment
 from ...segments.speed_change import SpeedChangeSegment
+from ...segments.taxi import TaxiSegment
 from ....mission.segments.altitude_change import AltitudeChangeSegment
 
 RANGE_STEP_TAG = "range_step"
@@ -29,11 +31,11 @@ PHASE_DEFINITIONS_TAG = "phase_definitions"
 
 
 class BaseStepNames(Enum):
-    CLIMB = "climb"
+    ALTITUDE_CHANGE = "altitude_change"
     CRUISE = "cruise"
-    DESCENT = "descent"
-    ACCELERATION = "acceleration"
-    DECELERATION = "deceleration"
+    SPEED_CHANGE = "speed_change"
+    HOLDING = "holding"
+    TAXI = "taxi"
 
     @classmethod
     def string_values(cls):
@@ -42,11 +44,11 @@ class BaseStepNames(Enum):
     @classmethod
     def get_segment_class(cls, value):
         segments = {
-            cls.CLIMB.value: AltitudeChangeSegment,
-            cls.DESCENT.value: AltitudeChangeSegment,
+            cls.ALTITUDE_CHANGE.value: AltitudeChangeSegment,
             cls.CRUISE.value: CruiseSegment,
-            cls.ACCELERATION.value: SpeedChangeSegment,
-            cls.DECELERATION.value: SpeedChangeSegment,
+            cls.SPEED_CHANGE.value: SpeedChangeSegment,
+            cls.HOLDING.value: HoldSegment,
+            cls.TAXI.value: TaxiSegment,
         }
         return segments[value]
 
@@ -93,10 +95,10 @@ def load_mission_file(file_path: str) -> dict:
             Ensure(step.keys()).contains(STEP_TAG)
             Ensure(BaseStepNames.string_values()).contains(step[STEP_TAG])
 
-            if step[STEP_TAG] != "climb":
-                step.revalidate(Map(STEP_SCHEMA_DICT))
-            else:
+            if step[STEP_TAG] == BaseStepNames.ALTITUDE_CHANGE.value:
                 step.revalidate(Map(CLIMB_STEP_SCHEMA_DICT))
+            else:
+                step.revalidate(Map(STEP_SCHEMA_DICT))
 
     step_names = BaseStepNames.string_values() | set(content[PHASE_DEFINITIONS_TAG].keys())
 

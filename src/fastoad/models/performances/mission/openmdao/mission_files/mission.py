@@ -11,9 +11,11 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from typing import Mapping, Union
+from typing import Mapping, Union, Dict
 
+import numpy as np
 import openmdao.api as om
+import pandas as pd
 
 from fastoad.base.flight_point import FlightPoint
 from fastoad.models.propulsion import IPropulsion
@@ -37,18 +39,70 @@ class Mission:
     def __init__(
         self, mission_definition: Union[dict, str], propulsion: IPropulsion, reference_area: float
     ):
-        self._base_kwargs = {"reference_area": reference_area, "propulsion": propulsion}
-        self._input_map = {}
-
         if isinstance(mission_definition, str):
             self._mission_definition = load_mission_file(mission_definition)
         else:
             self._mission_definition = mission_definition
+        self._base_kwargs = {"reference_area": reference_area, "propulsion": propulsion}
         self._inputs = {}
         self._outputs = {}
-        self._phases = {}
-        self._routes = {}
-        self._flight = []
+        self._phases: Dict[str, FlightSequence] = {}
+        self._name = ""
+        self._routes: Dict[str, SimpleFlight] = {}
+        self._mission: Dict[str] = []
+
+    def setup(self, component: om.ExplicitComponent):
+        self.find_inputs()
+        self.find_outputs()
+        for name, units in self._inputs.items():
+            component.add_input(name, np.nan, units=units)
+
+        for name, units in self._outputs.items():
+            component.add_output(name, units=units)
+
+    def compute(self, inputs, outputs, start_flight_point: FlightPoint):
+        self.build_phases(inputs)
+        self.build_routes(inputs)
+        self.build_mission()
+
+        flight_point_list = []
+
+        def _compute_vars(name_root, start: FlightPoint, end: FlightPoint):
+            outputs[name_root + "duration"] = end.time - start.time
+            outputs[name_root + "fuel"] = end.mass - start.mass
+            outputs[name_root + "distance"] = end.ground_distance - start.ground_distance
+
+        end_flight_point = current_flight_point = start_flight_point
+        for route_name in self._mission:
+            route = self._routes[route_name]
+            flight_points = route.compute_from(current_flight_point)
+            flight_point_list.append(flight_points)
+
+            end_flight_point = FlightPoint(flight_points.iloc[-1])
+            var_name_root = "data:mission:%s:%s" % (self._name, route_name)
+            _compute_vars(var_name_root, current_flight_point, end_flight_point)
+
+            phase_start = current_flight_point
+            for phase in route.flight_sequence:
+                phase_end = FlightPoint(
+                    flight_points.loc[flight_points.name == phase.name].iloc[-1]
+                )
+                var_name_root = "data:mission:%s:%s:%s" % (self._name, route_name, phase.name)
+                _compute_vars(var_name_root, phase_start, phase_end)
+                phase_start = phase_end
+
+            current_flight_point = end_flight_point
+
+        var_name_root = "data:mission:%s" % self._name
+        _compute_vars(var_name_root, start_flight_point, end_flight_point)
+
+        flight_points = (
+            pd.concat(flight_point_list)
+            .reset_index(drop=True)
+            .applymap(lambda x: np.asscalar(np.asarray(x)))
+        )
+
+        return flight_points
 
     def find_inputs(self, struct=None):
         if not struct:
@@ -69,17 +123,26 @@ class Mission:
                 self.find_inputs(value)
 
     def find_outputs(self):
-        mission_name = self._mission_definition[MISSION_DEFINITION_TAG]["name"]
+        def _add_vars(name_root):
+            self._outputs[name_root + "duration"] = "s"
+            self._outputs[name_root + "fuel"] = "kg"
+            self._outputs[name_root + "distance"] = "m"
+
+        self._name = self._mission_definition[MISSION_DEFINITION_TAG]["name"]
+        var_name_root = "data:mission:%s:" % self._name
+        _add_vars(var_name_root)
+
         for route_name, definition in self._mission_definition[ROUTE_DEFINITIONS_TAG].items():
+            var_name_root += "%s:" % route_name
+            _add_vars(var_name_root)
+
             for step_definition in definition[STEPS_TAG]:
                 if STEP_TAG in step_definition:
                     phase_name = step_definition[STEP_TAG]
                 else:
                     phase_name = "cruise"
-                var_name_root = "data:mission:%s:%s:%s:" % (mission_name, route_name, phase_name)
-                self._outputs[var_name_root + "duration"] = "s"
-                self._outputs[var_name_root + "fuel"] = "kg"
-                self._outputs[var_name_root + "distance"] = "m"
+                var_name_root += "%s:" % phase_name
+                _add_vars(var_name_root)
 
     def build_phases(self, inputs: Mapping):
         for phase_name, definition in self._mission_definition[PHASE_DEFINITIONS_TAG].items():
@@ -136,4 +199,5 @@ class Mission:
             self._routes[route_name] = RangedFlight(sequence, flight_range)
 
     def build_mission(self):
-        pass
+        self._name = self._mission_definition[MISSION_DEFINITION_TAG]["name"]
+        self._mission = list(self._mission_definition[MISSION_DEFINITION_TAG][STEPS_TAG].values())
