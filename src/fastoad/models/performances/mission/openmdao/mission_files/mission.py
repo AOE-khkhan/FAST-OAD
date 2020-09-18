@@ -24,7 +24,7 @@ from .schema import (
     ROUTE_DEFINITIONS_TAG,
     STEP_TAG,
     STEPS_TAG,
-    BaseStepNames,
+    SegmentNames,
     load_mission_file,
     RANGE_STEP_TAG,
     MISSION_DEFINITION_TAG,
@@ -151,7 +151,7 @@ class Mission:
             kwargs["name"] = phase_name
 
             for step_definition in definition[STEPS_TAG]:
-                segment_class = BaseStepNames.get_segment_class(step_definition[STEP_TAG])
+                segment_class = SegmentNames.get_segment_class(step_definition[STEP_TAG])
                 step_kwargs = kwargs.copy()
                 step_kwargs.update(
                     {name: value for name, value in step_definition.items() if name != STEP_TAG}

@@ -40,7 +40,7 @@ def test_schema():
                                         [
                                             OrderedDict(
                                                 [
-                                                    ("step", "altitude_change"),
+                                                    ("segment", "altitude_change"),
                                                     (
                                                         "target",
                                                         OrderedDict(
@@ -67,7 +67,7 @@ def test_schema():
                                             ),
                                             OrderedDict(
                                                 [
-                                                    ("step", "speed_change"),
+                                                    ("segment", "speed_change"),
                                                     (
                                                         "target",
                                                         OrderedDict(
@@ -83,7 +83,7 @@ def test_schema():
                                             ),
                                             OrderedDict(
                                                 [
-                                                    ("step", "altitude_change"),
+                                                    ("segment", "altitude_change"),
                                                     (
                                                         "polar",
                                                         "data:aerodynamics:aircraft:low_speed",
@@ -124,7 +124,7 @@ def test_schema():
                                         [
                                             OrderedDict(
                                                 [
-                                                    ("step", "altitude_change"),
+                                                    ("segment", "altitude_change"),
                                                     (
                                                         "target",
                                                         OrderedDict(
@@ -151,7 +151,7 @@ def test_schema():
                                             ),
                                             OrderedDict(
                                                 [
-                                                    ("step", "speed_change"),
+                                                    ("segment", "speed_change"),
                                                     (
                                                         "target",
                                                         OrderedDict(
@@ -172,7 +172,7 @@ def test_schema():
                                             ),
                                             OrderedDict(
                                                 [
-                                                    ("step", "altitude_change"),
+                                                    ("segment", "altitude_change"),
                                                     (
                                                         "target",
                                                         OrderedDict(
@@ -212,7 +212,7 @@ def test_schema():
                                         [
                                             OrderedDict(
                                                 [
-                                                    ("step", "altitude_change"),
+                                                    ("segment", "altitude_change"),
                                                     (
                                                         "target",
                                                         OrderedDict(
@@ -239,7 +239,7 @@ def test_schema():
                                             ),
                                             OrderedDict(
                                                 [
-                                                    ("step", "altitude_change"),
+                                                    ("segment", "altitude_change"),
                                                     (
                                                         "target",
                                                         OrderedDict(
@@ -266,7 +266,7 @@ def test_schema():
                                             ),
                                             OrderedDict(
                                                 [
-                                                    ("step", "speed_change"),
+                                                    ("segment", "speed_change"),
                                                     (
                                                         "target",
                                                         OrderedDict(
@@ -287,7 +287,7 @@ def test_schema():
                                             ),
                                             OrderedDict(
                                                 [
-                                                    ("step", "altitude_change"),
+                                                    ("segment", "altitude_change"),
                                                     (
                                                         "target",
                                                         OrderedDict(
@@ -317,6 +317,67 @@ def test_schema():
                                 ]
                             ),
                         ),
+                        (
+                            "holding",
+                            OrderedDict(
+                                [
+                                    (
+                                        "steps",
+                                        [
+                                            OrderedDict(
+                                                [
+                                                    ("segment", "holding"),
+                                                    ("polar", "data:aerodynamics:aircraft:cruise"),
+                                                    (
+                                                        "target",
+                                                        OrderedDict(
+                                                            [
+                                                                (
+                                                                    "time",
+                                                                    "data:mission:sizing:holding:duration",
+                                                                )
+                                                            ]
+                                                        ),
+                                                    ),
+                                                ]
+                                            )
+                                        ],
+                                    )
+                                ]
+                            ),
+                        ),
+                        (
+                            "taxi_in",
+                            OrderedDict(
+                                [
+                                    (
+                                        "steps",
+                                        [
+                                            OrderedDict(
+                                                [
+                                                    ("segment", "taxi"),
+                                                    (
+                                                        "thrust_rate",
+                                                        "data:mission:sizing:taxi_in:thrust_rate",
+                                                    ),
+                                                    (
+                                                        "target",
+                                                        OrderedDict(
+                                                            [
+                                                                (
+                                                                    "time",
+                                                                    "data:mission:sizing:taxi_in:duration",
+                                                                )
+                                                            ]
+                                                        ),
+                                                    ),
+                                                ]
+                                            )
+                                        ],
+                                    )
+                                ]
+                            ),
+                        ),
                     ]
                 ),
             ),
@@ -332,8 +393,8 @@ def test_schema():
                                     (
                                         "steps",
                                         [
-                                            OrderedDict([("step", "initial_climb")]),
-                                            OrderedDict([("step", "climb")]),
+                                            OrderedDict([("phase", "initial_climb")]),
+                                            OrderedDict([("phase", "climb")]),
                                             OrderedDict(
                                                 [
                                                     ("range_step", "cruise"),
@@ -341,7 +402,7 @@ def test_schema():
                                                     ("polar", "data:aerodynamics:aircraft:cruise"),
                                                 ]
                                             ),
-                                            OrderedDict([("step", "descent")]),
+                                            OrderedDict([("phase", "descent")]),
                                         ],
                                     ),
                                 ]
@@ -355,7 +416,7 @@ def test_schema():
                                     (
                                         "steps",
                                         [
-                                            OrderedDict([("step", "climb")]),
+                                            OrderedDict([("phase", "climb")]),
                                             OrderedDict(
                                                 [
                                                     ("range_step", "cruise"),
@@ -363,7 +424,7 @@ def test_schema():
                                                     ("polar", "data:aerodynamics:aircraft:cruise"),
                                                 ]
                                             ),
-                                            OrderedDict([("step", "descent")]),
+                                            OrderedDict([("phase", "descent")]),
                                         ],
                                     ),
                                 ]
@@ -380,8 +441,10 @@ def test_schema():
                         (
                             "steps",
                             [
-                                OrderedDict([("step", "main")]),
-                                OrderedDict([("step", "diversion")]),
+                                OrderedDict([("route", "main")]),
+                                OrderedDict([("route", "diversion")]),
+                                OrderedDict([("phase", "holding")]),
+                                OrderedDict([("phase", "taxi_in")]),
                             ],
                         ),
                     ]

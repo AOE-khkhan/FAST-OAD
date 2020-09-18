@@ -22,15 +22,18 @@ from ...segments.speed_change import SpeedChangeSegment
 from ...segments.taxi import TaxiSegment
 from ....mission.segments.altitude_change import AltitudeChangeSegment
 
+# Tags
 RANGE_STEP_TAG = "range_step"
+SEGMENT_TAG = "segment"
+ROUTE_TAG = "route"
+PHASE_TAG = "phase"
 STEPS_TAG = "steps"
-STEP_TAG = "step"
 MISSION_DEFINITION_TAG = "mission"
 ROUTE_DEFINITIONS_TAG = "route_definitions"
 PHASE_DEFINITIONS_TAG = "phase_definitions"
 
 
-class BaseStepNames(Enum):
+class SegmentNames(Enum):
     ALTITUDE_CHANGE = "altitude_change"
     CRUISE = "cruise"
     SPEED_CHANGE = "speed_change"
@@ -53,6 +56,7 @@ class BaseStepNames(Enum):
         return segments[value]
 
 
+# Schemas
 TARGET_SCHEMA = MapPattern(
     Str(), Str() | Map({"value": Float() | Str(), Optional("unit", default=None): Str()})
 )
@@ -61,27 +65,28 @@ BASE_STEP_SCHEMA_DICT = {
     Optional("target", default=None): TARGET_SCHEMA,
     Optional("engine_setting", default=None): Str(),
     Optional("polar", default=None): Str(),
-    Optional("thrust_rate", default=None): Str() | Float(),
+    Optional("thrust_rate", default=None): Float() | Str(),
     Optional("time_step", default=None): Float(),
-    Optional("steps", default=None): Seq(Any()),
+    Optional("maximum_mach", default=None): Float() | Str(),
 }
 
-STEP_SCHEMA_DICT = {STEP_TAG: Str()}
-STEP_SCHEMA_DICT.update(BASE_STEP_SCHEMA_DICT)
+SEGMENT_SCHEMA_DICT = {SEGMENT_TAG: Str()}
+SEGMENT_SCHEMA_DICT.update(BASE_STEP_SCHEMA_DICT)
+
+PHASE_SCHEMA_DICT = {Optional(STEPS_TAG, default=None): Seq(Map(SEGMENT_SCHEMA_DICT))}
+PHASE_SCHEMA_DICT.update(BASE_STEP_SCHEMA_DICT)
+
 
 RANGE_STEP_SCHEMA_DICT = {RANGE_STEP_TAG: Str()}
 RANGE_STEP_SCHEMA_DICT.update(BASE_STEP_SCHEMA_DICT)
-
-CLIMB_STEP_SCHEMA_DICT = {Optional("maximum_mach", default=None): Str() | Float()}
-CLIMB_STEP_SCHEMA_DICT.update(STEP_SCHEMA_DICT)
 
 ROUTE_SCHEMA_DICT = {"range": Str() | Float(), STEPS_TAG: Seq(Any())}
 
 SCHEMA = Map(
     {
-        PHASE_DEFINITIONS_TAG: MapPattern(Str(), Map(BASE_STEP_SCHEMA_DICT)),
+        PHASE_DEFINITIONS_TAG: MapPattern(Str(), Map(PHASE_SCHEMA_DICT)),
         ROUTE_DEFINITIONS_TAG: MapPattern(Str(), Map(ROUTE_SCHEMA_DICT)),
-        MISSION_DEFINITION_TAG: Map({"name": Str(), STEPS_TAG: Seq(Map({STEP_TAG: Str()}))}),
+        MISSION_DEFINITION_TAG: Map({"name": Str(), STEPS_TAG: Seq(MapPattern(Str(), Str()))}),
     }
 )
 
@@ -90,32 +95,36 @@ def load_mission_file(file_path: str) -> dict:
     with open(file_path) as yaml_file:
         content = load(yaml_file.read(), SCHEMA)
 
-    for phase_def in content[PHASE_DEFINITIONS_TAG].keys():
-        for step in content[PHASE_DEFINITIONS_TAG][phase_def][STEPS_TAG]:
-            Ensure(step.keys()).contains(STEP_TAG)
-            Ensure(BaseStepNames.string_values()).contains(step[STEP_TAG])
+    # for phase_def in content[PHASE_DEFINITIONS_TAG].keys():
+    #     for step in content[PHASE_DEFINITIONS_TAG][phase_def][STEPS_TAG]:
+    #         Ensure(step.keys()).contains(STEP_TAG)
+    #         Ensure(SegmentNames.string_values()).contains(step[STEP_TAG])
+    #
+    #         if step[STEP_TAG] == SegmentNames.ALTITUDE_CHANGE.value:
+    #             step.revalidate(Map(CLIMB_STEP_SCHEMA_DICT))
+    #         else:
+    #             step.revalidate(Map(STEP_SCHEMA_DICT))
 
-            if step[STEP_TAG] == BaseStepNames.ALTITUDE_CHANGE.value:
-                step.revalidate(Map(CLIMB_STEP_SCHEMA_DICT))
-            else:
-                step.revalidate(Map(STEP_SCHEMA_DICT))
-
-    step_names = BaseStepNames.string_values() | set(content[PHASE_DEFINITIONS_TAG].keys())
+    step_names = set(content[PHASE_DEFINITIONS_TAG].keys())
 
     for route_def in content[ROUTE_DEFINITIONS_TAG].keys():
         range_step_count = 0
         for step in content[ROUTE_DEFINITIONS_TAG][route_def][STEPS_TAG]:
-            Ensure(step.keys()).contains_one_of([STEP_TAG, RANGE_STEP_TAG])
+            # Ensure(step.keys()).contains_one_of([PHASE_TAG, RANGE_STEP_TAG])
 
-            if STEP_TAG in step:
-                step.revalidate(Map({STEP_TAG: Str()}))
-                Ensure(step[STEP_TAG] in step_names)
+            if PHASE_TAG in step:
+                step.revalidate(Map({PHASE_TAG: Str()}))
+                Ensure(step[PHASE_TAG] in step_names)
             else:
                 range_step_count += 1
                 step.revalidate(Map(RANGE_STEP_SCHEMA_DICT))
-        Ensure(range_step_count).equals(1)
+        Ensure(range_step_count).is_less_than_or_equal_to(1)
 
-    flight_routes = [step[STEP_TAG] for step in content[MISSION_DEFINITION_TAG][STEPS_TAG]]
-    Ensure(flight_routes).contains_only(content[ROUTE_DEFINITIONS_TAG].keys())
+    for step in content[MISSION_DEFINITION_TAG][STEPS_TAG]:
+        step_type, step_name = tuple(*step.items())
+        if step_type == PHASE_TAG:
+            Ensure(step_name).is_in(content[PHASE_DEFINITIONS_TAG].keys())
+        elif step_type == ROUTE_TAG:
+            Ensure(step_name).is_in(content[ROUTE_DEFINITIONS_TAG].keys())
 
     return content.data
