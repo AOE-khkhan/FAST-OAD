@@ -22,14 +22,16 @@ from fastoad.models.propulsion import IPropulsion
 from .schema import (
     PHASE_DEFINITIONS_TAG,
     ROUTE_DEFINITIONS_TAG,
-    STEP_TAG,
     STEPS_TAG,
     SegmentNames,
     load_mission_file,
     RANGE_STEP_TAG,
     MISSION_DEFINITION_TAG,
+    PHASE_TAG,
+    SEGMENT_TAG,
 )
 from ...flight.base import RangedFlight, SimpleFlight
+from ...polar import Polar
 from ....mission.base import FlightSequence
 
 BASE_UNITS = {"altitude": "m", "true_airspeed": "m/s", "equivalent_airspeed": "m/s", "range": "m"}
@@ -137,8 +139,8 @@ class Mission:
             _add_vars(var_name_root)
 
             for step_definition in definition[STEPS_TAG]:
-                if STEP_TAG in step_definition:
-                    phase_name = step_definition[STEP_TAG]
+                if PHASE_TAG in step_definition:
+                    phase_name = step_definition[PHASE_TAG]
                 else:
                     phase_name = "cruise"
                 var_name_root += "%s:" % phase_name
@@ -151,10 +153,10 @@ class Mission:
             kwargs["name"] = phase_name
 
             for step_definition in definition[STEPS_TAG]:
-                segment_class = SegmentNames.get_segment_class(step_definition[STEP_TAG])
+                segment_class = SegmentNames.get_segment_class(step_definition[SEGMENT_TAG])
                 step_kwargs = kwargs.copy()
                 step_kwargs.update(
-                    {name: value for name, value in step_definition.items() if name != STEP_TAG}
+                    {name: value for name, value in step_definition.items() if name != SEGMENT_TAG}
                 )
                 step_kwargs.update(self._base_kwargs)
 
@@ -168,11 +170,23 @@ class Mission:
                                     BASE_UNITS.get(target_key),
                                 )
                         step_kwargs[key] = FlightPoint(**value)
+                    elif key == "polar":
+                        polar = {}
+                        for coeff in ["CL", "CD"]:
+                            if isinstance(value[coeff], str) and ":" in value[coeff]:
+                                polar[coeff] = inputs[value[coeff]]
+                            else:
+                                polar[coeff] = value[coeff]
+
+                        step_kwargs[key] = Polar(polar["CL"], polar["CD"])
+
                     elif isinstance(value, str) and ":" in value:
                         step_kwargs[key] = inputs[value]
                     else:
                         step_kwargs[key] = value
 
+                print(step_definition[SEGMENT_TAG], step_kwargs)
+                print(segment_class)
                 segment = segment_class(**step_kwargs)
                 phase.flight_sequence.append(segment)
             self._phases[phase_name] = phase
@@ -183,11 +197,11 @@ class Mission:
             descent_phases = []
             climb = True
             for step_definition in definition[STEPS_TAG]:
-                if STEP_TAG in step_definition:
+                if PHASE_TAG in step_definition:
                     if climb:
-                        climb_phases.append(self._phases[step_definition[STEP_TAG]])
+                        climb_phases.append(self._phases[step_definition[PHASE_TAG]])
                     else:
-                        descent_phases.append(self._phases[step_definition[STEP_TAG]])
+                        descent_phases.append(self._phases[step_definition[PHASE_TAG]])
                 else:
                     # Schema ensures there is one and only one RANGE_STEP_TAG
                     cruise_phase = self._phases[step_definition[RANGE_STEP_TAG]]

@@ -14,6 +14,7 @@
 import os.path as pth
 from unittest.mock import Mock
 
+import numpy as np
 import pytest
 from scipy.constants import foot
 
@@ -31,6 +32,8 @@ def test_inputs():
     assert mission._inputs == {
         "data:TLAR:cruise_mach": None,
         "data:TLAR:range": "m",
+        "initial_climb:final_altitude": "m",
+        "initial_climb:final_equivalent_airspeed": "m/s",
         "data:aerodynamics:aircraft:cruise:CD": None,
         "data:aerodynamics:aircraft:cruise:CL": None,
         "data:aerodynamics:aircraft:low_speed:CD": None,
@@ -40,8 +43,9 @@ def test_inputs():
         "data:mission:sizing:climb:thrust_rate": None,
         "data:mission:sizing:descent:thrust_rate": None,
         "data:mission:sizing:diversion:distance": "m",
-        "initial_climb:final_altitude": "m",
-        "initial_climb:final_equivalent_airspeed": "m/s",
+        "data:mission:sizing:holding:duration": None,
+        "data:mission:sizing:taxi_in:duration": None,
+        "data:mission:sizing:taxi_in:thrust_rate": None,
     }
 
 
@@ -49,24 +53,32 @@ def test_build_phases():
     mission = Mission(pth.join(DATA_FOLDER_PATH, "mission.yml"), Mock(IPropulsion), 100.0)
     mission.find_inputs()
 
+    cl = np.linspace(0.0, 1.0, 11)
+    cd = 0.5 * cl ** 2
+
     inputs = {
         "data:TLAR:cruise_mach": 0.78,
-        "data:aerodynamics:aircraft:cruise:CD": [0.0, 0.5, 1.0],
-        "data:aerodynamics:aircraft:cruise:CL": [0.0, 0.5, 1.0],
-        "data:aerodynamics:aircraft:low_speed:CD": [0.0, 0.5, 1.0],
-        "data:aerodynamics:aircraft:low_speed:CL": [0.0, 0.5, 1.0],
-        "data:aerodynamics:aircraft:takeoff:CD": [0.0, 0.5, 1.0],
-        "data:aerodynamics:aircraft:takeoff:CL": [0.0, 0.5, 1.0],
-        "data:mission:sizing:climb:thrust_rate": 0.9,
-        "data:mission:sizing:descent:thrust_rate": 0.5,
+        "data:TLAR:range": 8.0e6,
         "initial_climb:final_altitude": 500,
         "initial_climb:final_equivalent_airspeed": 130.0,
+        "data:aerodynamics:aircraft:cruise:CD": cd,
+        "data:aerodynamics:aircraft:cruise:CL": cl,
+        "data:aerodynamics:aircraft:low_speed:CD": cd,
+        "data:aerodynamics:aircraft:low_speed:CL": cl,
+        "data:aerodynamics:aircraft:takeoff:CD": cd,
+        "data:aerodynamics:aircraft:takeoff:CL": cl,
+        "data:mission:sizing:climb:thrust_rate": 0.9,
+        "data:mission:sizing:descent:thrust_rate": 0.5,
+        "data:mission:sizing:diversion:distance": 1.0e6,
+        "data:mission:sizing:holding:duration": 2000.0,
+        "data:mission:sizing:taxi_in:duration": 300.0,
+        "data:mission:sizing:taxi_in:thrust_rate": 0.5,
     }
     mission.build_phases(inputs)
 
-    assert len(mission._phases) == 3
-    assert len(mission._phases["initial_climb_phase"].flight_sequence) == 3
-    steps = mission._phases["initial_climb_phase"].flight_sequence
+    assert len(mission._phases) == 5
+    assert len(mission._phases["initial_climb"].flight_sequence) == 3
+    steps = mission._phases["initial_climb"].flight_sequence
     assert isinstance(steps[0], AltitudeChangeSegment)
     assert isinstance(steps[1], SpeedChangeSegment)
     assert isinstance(steps[2], AltitudeChangeSegment)

@@ -1,6 +1,6 @@
 """Base classes for simulating flight segments."""
 #  This file is part of FAST : A framework for rapid Overall Aircraft Design
-#  Copyright (C) 2020  ONERA/ISAE
+#  Copyright (C) 2020  ONERA & ISAE-SUPAERO
 #  FAST is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
 #  the Free Software Foundation, either version 3 of the License, or
@@ -84,6 +84,8 @@ class AbstractSegment(IFlightPart, DynamicAttributeDict):
         :param reference_area: the reference area for aerodynamic forces
         :param polar: the aerodynamic polar
         """
+        super().__init__()
+
         self.propulsion = propulsion
         self.reference_area = reference_area
         self.polar = polar
@@ -92,7 +94,6 @@ class AbstractSegment(IFlightPart, DynamicAttributeDict):
         # If true, computation will stop if a flight point is further from target
         # than previous one.
         self.interrupt_if_getting_further_from_target = True
-        super().__init__(**kwargs)
 
     def compute_from(self, start: FlightPoint) -> pd.DataFrame:
         """
