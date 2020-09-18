@@ -45,7 +45,7 @@ SEGMENT_KEYWORD_ARGUMENTS = {
 
 
 @AddKeyAttributes(SEGMENT_KEYWORD_ARGUMENTS)
-class AbstractSegment(IFlightPart, DynamicAttributeDict):
+class AbstractSegment(DynamicAttributeDict, IFlightPart):
     """
     Base class for flight path segment.
 
@@ -84,8 +84,6 @@ class AbstractSegment(IFlightPart, DynamicAttributeDict):
         :param reference_area: the reference area for aerodynamic forces
         :param polar: the aerodynamic polar
         """
-        super().__init__()
-
         self.propulsion = propulsion
         self.reference_area = reference_area
         self.polar = polar
@@ -94,6 +92,7 @@ class AbstractSegment(IFlightPart, DynamicAttributeDict):
         # If true, computation will stop if a flight point is further from target
         # than previous one.
         self.interrupt_if_getting_further_from_target = True
+        super().__init__(**kwargs)
 
     def compute_from(self, start: FlightPoint) -> pd.DataFrame:
         """
