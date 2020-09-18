@@ -23,6 +23,10 @@ from fastoad.models.propulsion import IPropulsion
 
 
 class IFlightPart(ABC):
+    def __init__(self):
+        self.name = None
+        self._flight_sequence = []
+
     def compute_from(self, start: FlightPoint) -> pd.DataFrame:
         """
         Computes a flight sequence from provided start point.
@@ -40,6 +44,7 @@ class FlightSequence(IFlightPart):
     """
 
     def __init__(self):
+        super().__init__()
         self._flight_sequence = []
 
     def compute_from(self, start: FlightPoint) -> pd.DataFrame:
@@ -79,7 +84,7 @@ class AbstractManualThrustFlightPhase(FlightSequence, ABC):
         polar: Polar,
         thrust_rate: float = 1.0,
         name="",
-        time_step=None,
+        time_step=None
     ):
         """
         Initialization is done only with keyword arguments.
@@ -91,6 +96,7 @@ class AbstractManualThrustFlightPhase(FlightSequence, ABC):
         :param time_step: if provided, this time step will be applied for all segments.
         """
 
+        super().__init__()
         self.segment_kwargs = {
             "propulsion": propulsion,
             "reference_area": reference_area,
